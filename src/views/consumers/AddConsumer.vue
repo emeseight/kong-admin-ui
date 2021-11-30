@@ -31,9 +31,6 @@
             <PluginTable v-bind:plugins="plugins"></PluginTable>
         </div>
 
-        <HMACAuthConfigTable  v-bind:consumerId="consumerId" v-if="consumerId"></HMACAuthConfigTable>
-        <OAuth2ConfigTable  v-bind:consumerId="consumerId" v-if="consumerId"></OAuth2ConfigTable>
-        <BasicAuthConfigTable  v-bind:consumerId="consumerId" v-if="consumerId"></BasicAuthConfigTable>
         <KeyAuthConfigTable  v-bind:consumerId="consumerId" v-if="consumerId"></KeyAuthConfigTable>
         <JWTConfigTable  v-bind:consumerId="consumerId" v-if="consumerId"></JWTConfigTable>
         <ACLConfigTable  v-bind:consumerId="consumerId" v-if="consumerId"></ACLConfigTable>
@@ -45,9 +42,6 @@
 <script>
     import moment from 'moment'
     import PluginTable from '@/components/plugins/PluginTable'
-    import HMACAuthConfigTable from '@/components/consumers/HMACAuthConfigTable'
-    import OAuth2ConfigTable from '@/components/consumers/OAuth2ConfigTable'
-    import BasicAuthConfigTable from '@/components/consumers/BasicAuthConfigTable'
     import KeyAuthConfigTable from '@/components/consumers/KeyAuthConfigTable'
     import JWTConfigTable from '@/components/consumers/JWTConfigTable'
     import ACLConfigTable from '@/components/consumers/ACLConfigTable'
@@ -55,7 +49,7 @@
 
     export default {
         name: "AddConsumer",
-        components:{PluginTable,HMACAuthConfigTable,OAuth2ConfigTable,BasicAuthConfigTable,KeyAuthConfigTable,JWTConfigTable,ACLConfigTable},
+        components:{PluginTable,KeyAuthConfigTable,JWTConfigTable,ACLConfigTable},
         data() {
             return {
                 formItem: {
