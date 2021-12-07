@@ -1,0 +1,65 @@
+name: Build and deploy
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  build:
+    name: Build and deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-node@v2-beta
+        with:
+          always-auth: true
+          node-version: '14'
+
+      - name: Get tag version
+        id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+
+      - uses: actions/cache@v2
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run build
+        run: npm run build
+
+      - name: Package project
+        shell: bash
+        run:
+          tar -czf crepo-kong-admin-ui.tar.gz  package*.json dist node_modules package*.json
+
+      - name: Package Docker
+        shell: bash
+        run: |
+          mkdir docker
+          cp -r dist docker/
+          cp Dockerfile docker/
+      - name: Push to artifactory
+        shell: bash
+        run: |
+          curl -H "X-JFrog-Art-Api:${{ secrets.ARTIFACTORY_S_RBMH_BLD_CREPO_APIKEY }}" -T crepo-kong-admin-ui.tar.gz "https://artifactory.redbullmediahouse.com/crepo-serverless/crepo-kong-admin-ui/crepo-kong-admin-ui-${{ steps.get_version.outputs.VERSION }}.tar.gz"
+      - uses: kciter/aws-ecr-action@master
+        id: docker_job
+        with:
+          access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          account_id: 148880244575
+          path: docker
+          repo: crepo/kongadminui
+          region: eu-central-1
+          tags: ${{ steps.get_version.outputs.VERSION }}
+          create_repo: true
+
+      - name: Trigger deployment
+        shell: bash
+        run: |
+          curl https://spinnaker-api.redbullmediahouse.com/webhooks/webhook/crepo-kong-admin-u -X POST -H "content-type: application/json" -d "{ \"artifacts\": [ { \"type\": \"archive/tgz\", \"version\": \"${{ steps.get_version.outputs.VERSION }}\", \"name\": \"crepo-kong-admin-u\" } ] }"
